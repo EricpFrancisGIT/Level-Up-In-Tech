@@ -1,0 +1,130 @@
+Moving a Banking Website to AWS S3…..part 1
+ 
+by Eric Francis
+
+
+Hello readers and welcome back to my journey to becoming more skilled in the cloud. It has been quite some time since I posted anything here, but this is the first project i am posting here since starting the Level Up in Tech program. So, with that in mind, lace up your boots, drink some water, start off on the left foot and come with me on this trip.
+
+USE CASE:
+
+I have been contracted by a financial startup called Level Up Bank, and this start-up was looking to migrate their website off a traditional server within a datacenter to being fully cloud-based. The client had settled on wanting to use Amazon Web Services S3 to achieve some measure of cost saving in that with the website moving off a traditional server, that server could be powered off and decommissioned, or repurposed for something else. Along with cost savings, there is the factor of improved scalability with S3 and high availability through the fact that AWS has multiple availability zones and regions in the event of an outage. For more information on resiliency in S3, please access the following link: Resiliency in Amazon S3.
+
+AWS Services Used:
+
+For this project, there were 2 services used within AWS to complete this phase:
+
+AWS S3
+AWS Policy Generator
+Amazon S3:
+
+You are probably wondering what is this thing I am referring to? What is Amazon S3? Amazon S3 is defined as “an object storage service that offers industry-leading scalability, data availability, security, and performance” (Amazon.com, 2006). In essence, you could consider it off-site storage that is readily available should you need to move files in and out of the datacenter.
+
+So, with that in mind, let us begin by getting Level Up Bank’s website into the cloud however there are some pre-requisites that we need to have prior to getting it up and running.
+
+Pre-requisites
+
+1. AWS Account
+
+2. IAM account configured with correct permissions (DO NOT USE THE ROOT ACCOUNT TO BUILD ANY RESOURCES)
+
+3. index.html provided or you can generate your own.
+
+So with that in mind, lets begin getting Level Up Bank’s website into the cloud. The first step begins with setting up an S3 Bucket, so after I had gotten logged in using my own IAM user, I then accessed S3.
+
+
+AWS Console Home
+I arrived at the landing page for S3 and then selected “Create bucket” as you see in this attached screenshot.
+
+
+First Step in S3 Bucket Creation
+Now the configuration process starts for the creation of this first S3 bucket in AWS for Level Up Bank. First, i had to come up with a unique name for this bucket since AWS requires it to be globally unique. You simply cannot have it as “my bucket” because someone has probably already claimed that name for themselves. So since this is a website migration, I had decided to name it as “website-migration-project” in the name, and also had left the Access Control
+
+
+General Configuration of the Bucket
+Moving on to the next step, I left the “Block All Public Access” options checked for now, but it would be relatively easy to modify that after the bucket is created.
+
+
+More configuration settings
+The initial configuration is now complete, but now the real fun begins. I had to get the file or “object” into the bucket, so i went ahead and clicked on the “Upload” icon that is highlighted here
+
+
+Step 1 for Adding Files/”Objects” to bucket
+The next screen presented a display where I could upload individual files or even an entire folder. Given that the startup engineers only gave me 1 file to work with, I will simply add it. So I selected the “Add Files” option” in order to get to the file saved on my local system.
+
+
+Adding Files or Folders
+After selecting that option, it opened up window on my local system where I went to the file folder where I had saved this file, selected it, and then uploaded it to the bucket. Nice, quick, simple, and easy right?
+
+
+Uploading index.html file
+Not so fast because even though the file is uploaded successfully, we still need to set the bucket up to serve as the host for the website. How do we do that? Simply going to the properties “Tab” of the bucket and scroll all the way down to the bottom where you see the “Static Website Hosting” setting and selecting the “Edit” button
+
+
+Setting up for Static Website Hosting
+Here is where the configuration started taking shape for the bank because with a few clicks and some small keystrokes, i was able to turn this bucket into a webserver. Simply selecting the “Enable” option as well as specifying the “index.html” file, along with clicking the “Save Changes” button, i was able to successfully get the website setup as you see here:
+
+
+Configuration settings.
+With that successfully configured, I was rewarded with the web link that you see here:
+
+
+Web Link
+Having patted myself on the back, I went ahead and opened it thinking that I could tell my client that it was done and ready for them, right?
+
+
+When I copied that link into a separate browser and pressed enter, instead of seeing the website, I was presented with something no Administrator or engineer wants to see:
+
+
+hmmmm……Thats a problem.
+Normally someone would start panicking and going “Oh no, i messed this all up and now its going to be costing me my job. However, as it is with everything in the cloud, there are solutions to everything. So I went back into the bucket and checked to see what was missing in my settings. First off I didn't turn off the public access blocks which i did uncheck as you can see here and saved those changes
+
+
+“Turning On” public access to the bucket
+But i was far from being done, because I also remember that a bucket policy would need to be in place to allow the file to be accessed, however no policy was configured. Thankfully AWS has a policy generator which would make it quick and easy to generate one, so I started with selecting “Edit” and then selecting “Policy Generator”.
+
+
+Editing Bucket Policy
+
+Opening the policy generator
+A new tab opened in my browser and I was now looking at the policy generator so I started configuring this custom policy for the bank’s S3 bucket as you see here: It was an S3 Bucket policy, with the effect of “Allow”, the principal would be everything in the bucket, for the S3 service, the Get-Object action was specified and also had to put the AWS ARN (Amazon Resource Name).
+
+
+AWS Policy Generator
+With all that information presented to the generator, the next step was to click on Add Statement, and the subsequent policy was created quickly. Opening up the policy itself, the following json code was shown:
+
+{
+    "Version": "2012-10-17",
+    "Id": "Policy1737239642407",
+    "Statement": [
+        {
+            "Sid": "Stmt1737239635561",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "*"
+            },
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::website-migration-project/*"
+        }
+    ]
+}
+Now that the bucket policy, it was time to get it over to the bucket itself so after copying that code, I went back to the bucket Permissions tab, down to “bucket policy”, clicked “Edit” and then in policy itself, pasted the new bucket after making a small modification to the “Resource” field where I added a /* so that everything in the bucket is made available.
+
+
+New Bucket Policy
+So we have our index.html file uploaded, the bucket permissions and properties have been modified, a bucket policy has been generated and added to the bucket, so we should be all set yes? With fingers crossed, I attempted to access the link again via a private browser and this time, my browser showed this:
+
+
+Webpage via Private Browser
+Success!! Level Up Bank’s website is now fully cloud based which the client is more than pleased with. But as you are probably aware as engineers/administrators yourselves, there is always something more that we can do.
+
+But you will have to stay tuned for part 2 coming soon, fellow travelers…..
+
+So lets summarize this:
+
+Level Up Bank’s website was to migrate from the old datacenter to AWS via S3
+the S3 bucket was created with a globally unique identifier.
+The index.html document was uploaded successfully
+Settings were modified to turn on web-hosting from the bucket
+a bucket policy was generated and applied successfully
+now website was visible via web-hosting link successfully.
+I want to say thank you to you for reading this story today, and stay tuned for part 2.
